@@ -1,14 +1,31 @@
+package it.unibo.deathnote.impl;
+import java.util.HashMap;
+import java.util.Map;
+
 import it.unibo.deathnote.api.DeathNote;
 
+class Info{
+    String cause;
+    String details;
+
+    public Info(String details){
+        this.details = details;
+        this.cause = "Heart attack";
+    }
+
+    public Info(String details, String cause) {
+        this.details = details;
+        this.cause = cause;
+    }
+
+}
 public class DeathNoteImplementation implements DeathNote{
     
 
-
-    private String name;    //TODO bisogna fare una specie di lista dove ad ogni nome sono collegati dati diversi
-    private String cause;
-    private String details;
-    
+    private final Map<String, Info> people = new HashMap<>(); 
     private Long time;
+    private String lastNameWritten;
+
     @Override
     public String getRule(int ruleNumber) {
         if(ruleNumber < 1 || ruleNumber > RULES.size()){
@@ -23,19 +40,21 @@ public class DeathNoteImplementation implements DeathNote{
         if(name == null){
             throw new IllegalArgumentException();
         }
-        this.name = name;
+        people.put(name, new Info(""));
         this.time = System.currentTimeMillis();
+        this.lastNameWritten = name;
     }
     
     @Override
     public boolean writeDeathCause(String cause) {
-        if(!isNameWritten(this.name) || cause == null){
+        if(people.isEmpty() || cause == null){
             throw new IllegalStateException();
         }
-
+        
         if((System.currentTimeMillis() - this.time) <= 40){
             this.time = System.currentTimeMillis();
-            this.cause = cause;
+            Info tmpInfo = people.get(this.lastNameWritten);
+            tmpInfo.cause = cause;
             return true;
         }
         else{
@@ -45,13 +64,14 @@ public class DeathNoteImplementation implements DeathNote{
 
     @Override
     public boolean writeDetails(String details) {
-        if (!isNameWritten(this.name) || details == null) {
+        if (people.isEmpty() || details == null) {
             throw new IllegalStateException();
         }
         
         if ((System.currentTimeMillis() - this.time) <= 6040){
-            this.details = details;
             this.time = System.currentTimeMillis();
+            Info tmpInfo = people.get(this.lastNameWritten);
+            tmpInfo.details = details;
             return true;
         }
         else{
@@ -60,10 +80,21 @@ public class DeathNoteImplementation implements DeathNote{
     }
     @Override
     public String getDeathCause(String name) {
-        
+        if(!isNameWritten(name)){
+            throw new IllegalStateException();
+        }
+        return people.get(name).cause;
+    }
+
+    @Override
+    public String getDeathDetails(String name) {
+        if (!isNameWritten(name)){
+            throw new IllegalStateException();
+        }
+        return people.get(name).details;
     }
     @Override
     public boolean isNameWritten(String name) {
-        return !this.name.isEmpty();
+        return people.containsKey(name);
     }
 }
